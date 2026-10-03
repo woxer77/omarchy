@@ -1,0 +1,103 @@
+name: Build Omarchy Custom ISO
+
+on:
+  push:
+    branches:
+      - quattro
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    name: Build Omarchy ISO
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Checkout custom omarchy
+        uses: actions/checkout@v4
+        with:
+          path: omarchy
+
+      - name: Checkout omarchy-iso
+        uses: actions/checkout@v4
+        with:
+          repository: omacom/omarchy-iso
+          path: omarchy-iso
+          submodules: recursive
+
+      - name: Checkout omarchy-pkgs
+        uses: actions/checkout@v4
+        with:
+          repository: omacom/omarchy-pkgs
+          path: omarchy-pkgs
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Ensure fcitx compatibility in omarchy-pkgs
+        run: |
+          sed -i 's|install -Dm644 default/environment.d/10-omarchy-fcitx.conf|[[ ! -f default/environment.d/10-omarchy-fcitx.conf ]] \|\| install -Dm644 default/environment.d/10-omarchy-fcitx.conf|' omarchy-pkgs/pkgbuilds/omarchy-settings-dev/PKGBUILD || true
+          sed -i 's|install -Dm644 default/systemd/user/omarchy-fcitx5.service|[[ ! -f default/systemd/user/omarchy-fcitx5.service ]] \|\| install -Dm644 default/systemd/user/omarchy-fcitx5.service|' omarchy-pkgs/pkgbuilds/omarchy-settings-dev/PKGBUILD || true
+
+      - name: Build ISO
+        run: |
+          cd omarchy-iso
+          NO_BOOT_OFFER=1 ./bin/omarchy-iso-make --keep-pkg-cache --local-source ../omarchy ../omarchy-pkgs
+
+      - name: Calculate Checksums
+        run: |
+          cd omarchy-iso/release
+          ls -lh
+          sha256sum *.iso > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Split ISO for Releases (if > 2GB)
+        run: |
+          cd omarchy-iso/release
+          for iso in *.iso; do
+            if [ -f "$iso" ]; then
+              split -b 1900M "$iso" "${iso}.part_"
+            fi
+          done
+          ls -lh
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omarchy-custom-iso
+          path: |
+            omarchy-iso/release/*.iso
+            omarchy-iso/release/SHA256SUMS
+          retention-days: 14
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/quattro' || startsWith(github.ref, 'refs/tags/')
+        with:
+          tag_name: iso-v1.1-build-${{ github.run_number }}
+          name: Omarchy Custom ISO v1.1 (Build #${{ github.run_number }})
+          body: |
+            ## Omarchy Custom ISO v1.1
+            
+            Кастомный ISO-образ Omarchy Linux, собранный из вашей кастомизированной ветки (`MY_BUILD.md`).
+            
+            ### Способы скачивания:
+            1. **Цельный ISO** можно скачать в разделе **Actions** -> запуск workflow -> **Artifacts** (`omarchy-custom-iso`).
+            2. Либо скачайте части `.iso.part_*` ниже и объедините их в один файл:
+               - **Windows**: `copy /b omarchy*.iso.part_* omarchy-custom.iso`
+               - **Linux / macOS**: `cat omarchy*.iso.part_* > omarchy-custom.iso`
+          files: |
+            omarchy-iso/release/*.iso.part_*
+            omarchy-iso/release/SHA256SUMS
+        continue-on-error: true

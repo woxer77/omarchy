@@ -1,0 +1,10 @@
+[Unit]
+Description=Fcitx5 (disabled)
+ConditionPathExists=/usr/bin/fcitx5
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+
+[Install]
+WantedBy=graphical-session.target
