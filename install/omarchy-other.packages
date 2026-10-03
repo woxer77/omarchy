@@ -60,3 +60,9 @@ lsp-plugins-lv2
 
 # Framework 16
 qmk-hid
+
+# Dependencies for core/settings packages in offline mirror
+perl
+hicolor-icon-theme
+neovim
+gnome-keyring

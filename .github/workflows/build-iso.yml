@@ -45,10 +45,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Ensure fcitx compatibility in omarchy-pkgs
+      - name: Apply build patches to omarchy-pkgs and omarchy-iso
         run: |
           sed -i 's|install -Dm644 default/environment.d/10-omarchy-fcitx.conf|[[ ! -f default/environment.d/10-omarchy-fcitx.conf ]] \|\| install -Dm644 default/environment.d/10-omarchy-fcitx.conf|' omarchy-pkgs/pkgbuilds/omarchy-settings-dev/PKGBUILD || true
           sed -i 's|install -Dm644 default/systemd/user/omarchy-fcitx5.service|[[ ! -f default/systemd/user/omarchy-fcitx5.service ]] \|\| install -Dm644 default/systemd/user/omarchy-fcitx5.service|' omarchy-pkgs/pkgbuilds/omarchy-settings-dev/PKGBUILD || true
+          sed -i 's/|| return 1/|| { pacman --config "$build_cache_dir\/pacman-offline.conf" --root "$resolve_root" --dbpath "$resolve_root\/var\/lib\/pacman" --noconfirm -S "${targets[@]}" --print; return 1; }/2' omarchy-iso/builder/build-iso.sh || true
 
       - name: Build ISO
         run: |
