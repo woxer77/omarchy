@@ -28,13 +28,13 @@ local non_latin_layouts =
 
 local vconsole = read_vconsole()
 
-local kb_layout = vconsole.XKBLAYOUT or "us"
+local kb_layout = vconsole.XKBLAYOUT or "us,ru"
 local kb_variant = vconsole.XKBVARIANT or ""
--- CapsLock is the compose key, so Caps Lock itself has to live somewhere else.
--- Both Shifts together is the usual home for it, but it's easy to hit by
--- accident while typing. The _cancel variant sets Caps Lock the same way and
--- releases it on the next lone Shift, so a misfire clears itself.
-local kb_options = "compose:caps,shift:both_capslock_cancel"
+local kb_options = "grp:alt_shift_toggle"
+
+if kb_layout == "us" then
+  kb_layout = "us,ru"
+end
 
 -- Hyprland resolves keybindings against the first entry in kb_layout, not the
 -- layout that's currently active, so Omarchy's Latin-keysym bindings (SUPER + W
@@ -43,8 +43,6 @@ local kb_options = "compose:caps,shift:both_capslock_cancel"
 if non_latin_layouts:find(" " .. kb_layout:match("^[^,]*") .. " ", 1, true) then
   kb_layout = "us," .. kb_layout
   kb_variant = "," .. kb_variant
-  -- Reach the original layout with Left Alt + Right Alt.
-  kb_options = kb_options .. ",grp:alts_toggle"
 end
 
 hl.config({

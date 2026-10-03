@@ -21,8 +21,6 @@ hl.env("XDG_SESSION_TYPE", "wayland")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 
--- Use XCompose file.
-hl.env("XCOMPOSEFILE", paths.home .. "/.XCompose")
 
 -- hyprctl setenv doesn't reach keybind dispatcher env; use hl.env.
 hl.env("OMARCHY_PATH", paths.omarchy_path)

@@ -673,14 +673,10 @@ Timezone,${timezone:-UTC}" |
 # Groups recorded by omarchy-apply-system's scripts at install time
 # (/var/lib/omarchy/provisioning/groups), filtered to groups that exist on this system.
 user_groups() {
-  local groups="wheel" group
+  local groups="wheel,docker" group
   if [[ -f $PROVISIONING_DIR/groups ]]; then
     while IFS= read -r group; do
       [[ -n $group ]] || continue
-      # Never replay old privileged group defaults. Docker is always opt-in.
-      # Input is only retained when the factory image has one of the features
-      # whose installer deliberately grants access to raw input devices.
-      [[ $group == "docker" ]] && continue
       if [[ $group == "input" ]] &&
         ! pacman -Qq xpadneo-dkms &>/dev/null &&
         ! pacman -Qq ydotool &>/dev/null; then

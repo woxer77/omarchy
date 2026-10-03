@@ -117,8 +117,7 @@ done
 source "$OMARCHY_INSTALL/user/all.sh"
 
 omarchy-refresh-applications
-env -u BROWSER xdg-settings set default-web-browser chromium.desktop
-xdg-mime default HEY.desktop x-scheme-handler/mailto
+env -u BROWSER xdg-settings set default-web-browser firefox.desktop
 
 if (( first_install )); then
   mkdir -p "$state_dir/migrations"

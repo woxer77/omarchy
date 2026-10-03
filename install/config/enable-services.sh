@@ -16,3 +16,4 @@ systemctl enable sddm.service
 # whole session down. [Install] pulls in systemd-oomd.socket via Also=, which
 # is what the user manager reports app.slice candidacy over.
 systemctl enable systemd-oomd.service
+systemctl enable tailscaled.service
